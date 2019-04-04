@@ -1,7 +1,7 @@
 
 
 #include <iostream>
-#include <istream>>
+#include <istream>
 
 #include <fstream>
 
@@ -16,10 +16,10 @@ class Point
 public:
     Point(float x, float y) : x(x), y(y) {}
 
-    float getX() { return x; }
-    float getY() { return y; }
+    const float getX() const { return x; }
+    const float getY() const { return y; }
 
-    friend std::ostream& operator<<(std::ostream&, Point&);
+    friend std::ostream& operator<<(std::ostream&, const Point&);
 };
 
 class Line
@@ -30,26 +30,28 @@ class Line
 public:
     Line(Point q, Point p) : start(q), end(p) {}
 
-    Point getStart() { return start; }
-    Point getEnd() { return end; }
+    const Point getStart() const { return start; }
+    const Point getEnd() const { return end; }
 
     float ccw(Point r)
     {
 
         return (start.getX() * end.getY() - start.getY() * end.getX()) + (end.getX() * r.getY() - end.getY() * r.getX()) + (start.getY() * r.getX() - start.getX() * r.getY());
     }
+
+    friend std::ostream& operator<<(std::ostream& out, const Line& line);
 };
 
-std::ostream& operator<<(std::ostream& out, Point& point)
+std::ostream& operator<<(std::ostream& out, const Point& point)
 {
     out << "(" << point.getX() << ", " << point.getY() << ")";
     return out;
 }
 
 
-std::ostream& operator<<(std::ostream& out, Line& line)
+std::ostream& operator<<(std::ostream& out, const Line& line)
 {
-    out << *&line.getStart() << " " << *&line.getEnd();
+    out << line.getStart() << " " << line.getEnd();
     return out;
 }
 
