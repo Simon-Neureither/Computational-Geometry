@@ -9,6 +9,12 @@
 #include <tuple>
 
 #include <string>
+#include <chrono>
+
+#include <math.h>
+
+#define min(x,y) x > y ? y : x
+#define max(x,y) x > y ? x : y
 
 class Point
 {
@@ -20,15 +26,33 @@ public:
     const float getY() const { return y; }
 
     friend std::ostream& operator<<(std::ostream&, const Point&);
+
+    
+
 };
+
+bool operator==(const Point& lhs, const Point& rhs) {
+    return lhs.getX() == rhs.getX() && lhs.getY() == rhs.getY();
+}
+bool operator!=(const Point& lhs, const Point& rhs)
+{
+    return lhs.getX() != rhs.getX() || lhs.getY() != rhs.getY();
+}
+
 
 class Line
 {
     Point start;
     Point end;
 
+    Point p_min;
+    Point p_max;
+
 public:
-    Line(Point q, Point p) : start(q), end(p) {}
+    Line(Point q, Point p) : start(q), end(p),
+        p_min(Point(min(start.getX(), end.getX()), min(start.getY(), end.getY()))),
+        p_max(Point(max(start.getX(), end.getX()), max(start.getY(), end.getY())))
+    {}
 
     const Point getStart() const { return start; }
     const Point getEnd() const { return end; }
@@ -40,6 +64,19 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Line& line);
+
+
+    // Works only if colinear
+    bool IsBetween(const Point& point)
+    {
+     //   auto p_min = Point(min(start.getX(), end.getX()), min(start.getY(), end.getY()));
+     //   auto p_max = Point(max(start.getX(), end.getX()), max(start.getY(), end.getY()));
+
+        return point.getX() >= p_min.getX()
+            && point.getY() >= p_min.getY()
+            && point.getX() <= p_max.getX()
+            && point.getY() <= p_max.getY();
+    }
 };
 
 std::ostream& operator<<(std::ostream& out, const Point& point)
@@ -55,20 +92,37 @@ std::ostream& operator<<(std::ostream& out, const Line& line)
     return out;
 }
 
+class IntersectionInfo
+{
+public:
+    IntersectionInfo(Line l1, Line l2, float ccw, float ccw2, float ccw3, float ccw4) : l1(l1), l2(l2), ccw(ccw), ccw2(ccw2), ccw3(ccw3), ccw4(ccw4) {}
+    Line l1;
+    Line l2;
+    float ccw;
+    float ccw2;
+    float ccw3;
+    float ccw4;
+};
+
+
+
+long get_ms(const std::chrono::steady_clock::time_point p, const std::chrono::steady_clock::time_point p2)
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(p2 - p).count();
+}
 
 int main(void)
 {
+    auto start_time = std::chrono::steady_clock::now();
+
     std::vector<Line> lines;
 
-
-    std::ifstream input("E:\\ComputationalGeometry\\s_1000_1.dat", std::ios_base::in);
+    std::ifstream input("E:\\ComputationalGeometry\\s_10000_1.dat", std::ios_base::in);
 
     float x, y, x2, y2;
 
     if (!input.is_open())
         return 1;
-
-    //while (!input.eof())
 
     std::string textline;
 
@@ -91,17 +145,15 @@ int main(void)
         y2 = std::stof(textline, &sz);
         
         lines.push_back(Line(Point(x, y), Point(x2, y2)));
-
-
-        
-   //     std::cout << lines.size() << " " << lines[lines.size() - 1] << std::endl;
     }
 
-    std::ofstream out("E:\\ComputationalGeometry\\log.txt", std::ios_base::out);
+    auto finished_input_time = std::chrono::steady_clock::now();
+
+    std::vector<IntersectionInfo> intersecting_lines;
 
     for (int i = 0; i < lines.size(); i++)
     {
-        std::cout << "Testing line " << i << std::endl;
+        //std::cout << "Testing line " << i << std::endl;
         for (int j = i + 1; j < lines.size(); j++)
         {
                 Line line1 = lines[i];
@@ -114,17 +166,40 @@ int main(void)
 
                 if (ccw1 == 0 && ccw2 == 0 && ccw3 == 0 && ccw4 == 0)
                 {
-                    out << "Intersecting: " << line1 << " " << line2 << " " << ccw1 << " " << ccw2 << " " << ccw3 << " " << ccw4 << std::endl;
+
+                    if (line1.IsBetween(line2.getStart()) || line1.IsBetween(line2.getEnd()))
+                        intersecting_lines.push_back(IntersectionInfo(line1, line2, ccw1, ccw2, ccw3, ccw4));
+                        
                 }
                 else if (ccw1 * ccw2 <= 0 && ccw3 * ccw4 <= 0)
                 {
-                    out << "Intersecting: " << line1 << " " << line2 << " " << ccw1 << " " << ccw2 << " " << ccw3 << " " << ccw4 << std::endl;
+                    intersecting_lines.push_back(IntersectionInfo(line1, line2, ccw1, ccw2, ccw3, ccw4));
                 }
         }
     }
 
+    auto finished_generating_info_time = std::chrono::steady_clock::now();
+
+    std::ofstream out("E:\\ComputationalGeometry\\log.txt", std::ios_base::out);
+    for (int i = 0; i < intersecting_lines.size(); i++)
+    {
+        auto info = intersecting_lines[i];
+        out << "Intersecting: " << info.l1 << " " << info.l2 << " " << info.ccw << " " << info.ccw2 << " " << info.ccw3 << " " << info.ccw4 << std::endl;
+    }
 
     out.close();
+
+
+
+
+    auto end_time = std::chrono::steady_clock::now();
+
+    std::cout << "Time taken total: " << get_ms(start_time, end_time) << " milliseconds." << std::endl;
+    std::cout << "Time taken for parsing input: " << get_ms(start_time, finished_input_time) << " milliseconds." << std::endl;
+    std::cout << "Time taken for generating output: " << get_ms(finished_input_time, finished_generating_info_time) << " milliseconds." << std::endl;
+    std::cout << "Time taken for writing output: " << get_ms(finished_generating_info_time, end_time) << " milliseconds." << std::endl;
+
+    std::cout << "Number of intersections " << intersecting_lines.size() << "." << std::endl;
 
     getchar();
 
