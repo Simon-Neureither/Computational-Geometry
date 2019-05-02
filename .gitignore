@@ -2,6 +2,7 @@
 *.filters
 *.user
 *.out
+*.txt
 /.vscode
 /x64
 /Debug
