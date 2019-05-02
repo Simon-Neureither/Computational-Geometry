@@ -2,7 +2,7 @@
 *.filters
 *.user
 *.out
-/vscode
+/.vscode
 /x64
 /Debug
 /Release

@@ -114,10 +114,10 @@ long get_ms(const std::chrono::steady_clock::time_point p, const std::chrono::st
 int main(void)
 {
     auto start_time = std::chrono::steady_clock::now();
-
+ 
     std::vector<Line> lines;
 
-    std::ifstream input("E:\\ComputationalGeometry\\s_10000_1.dat", std::ios_base::in);
+    std::ifstream input("s_10000_1.dat", std::ios_base::in);
 
     float x, y, x2, y2;
 
@@ -180,7 +180,7 @@ int main(void)
 
     auto finished_generating_info_time = std::chrono::steady_clock::now();
 
-    std::ofstream out("E:\\ComputationalGeometry\\log.txt", std::ios_base::out);
+    std::ofstream out("log.txt", std::ios_base::out);
     for (int i = 0; i < intersecting_lines.size(); i++)
     {
         auto info = intersecting_lines[i];
