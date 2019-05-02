@@ -52,7 +52,7 @@ public:
         {
             area += m_points[i].getY() * (m_points[i - 1].getX() - m_points[i + 1].getX()) / 2;
         }
-        return area;
+        return abs(area);
     }
 };
 
@@ -140,19 +140,19 @@ int main(void)
 
     out.close();
 
-    float total = 0;
-
     for (auto it = state_to_surface.begin(); it != state_to_surface.end(); it++)
     {
+        float total = 0;
         std::cout << it->first << ": ";
         for (int i = 0; i < it->second.size(); i++)
         {
 
             float a = it->second[i].area();
-            std::cout << it->second[i].area() << "\r\n";
 
             total += (it->second[i].area());
         }
+
+        std::cout << total << std::endl;
     }
 
     getchar();
