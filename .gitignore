@@ -1,6 +1,7 @@
 *.vcxproj
 *.filters
 *.user
+*.out
 /vscode
 /x64
 /Debug
