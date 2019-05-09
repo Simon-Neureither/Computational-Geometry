@@ -23,7 +23,11 @@ private:
 public:
     Double(double d) : d(d) {}
     Double() : d(0) {}
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
     friend bool operator==(const Double& d, const Double& d2);
 
     friend Double operator*(const Double&d, const Double& d2);
@@ -47,7 +51,11 @@ public:
     friend auto cos(const Double&d);
     friend auto abs(const Double&d);
 
+<<<<<<< HEAD
     auto get()
+=======
+    double get()
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
     {
         return d;
     }
@@ -88,12 +96,20 @@ bool operator!=(const Double&d, const Double&d2)
 }
 Double operator+(const Double&d, const Double&d2)
 {
+<<<<<<< HEAD
     return d.d + d2.d;
+=======
+    return d.d+d2.d;
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
 }
 
 Double operator-(const Double&d, const Double&d2)
 {
+<<<<<<< HEAD
     return d.d - d2.d;
+=======
+    return d.d-d2.d;
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
 }
 Double operator/(const Double&d, const Double&d2)
 {
@@ -240,7 +256,11 @@ Point normalize(Point p)
 
     Double x = p.getX() / sum;
     Double y = p.getY() / sum;
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
     if (x == 0)
         y = abs(y);
     else if (x < 0)
@@ -301,9 +321,15 @@ Point getPointOfIntersection(Point p, Point q, Point s, Point t)
 
     if (Point(p.getX() + A * pq.getX(), p.getY() + A * pq.getY()) != Point(s.getX() + B * st.getX(), s.getY() + B * st.getY()))
     {
+<<<<<<< HEAD
         // __debugbreak();
        // std::cout << "Error: " << p << " " << q << " " << s << " " << t << " produces intersections: " << Point(p.getX() + A * pq.getX(), p.getY() + A * pq.getY())
        //     << " and " << Point(s.getX() + B * st.getX(), s.getY() + B * st.getY()) << std::endl;
+=======
+       // __debugbreak();
+        std::cout << "Error: " << p << " " << q << " " << s << " " << t << " produces intersections: " << Point(p.getX() + A * pq.getX(), p.getY() + A * pq.getY())
+            << " and " << Point(s.getX() + B * st.getX(), s.getY() + B * st.getY()) << std::endl;
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
     }
 
     return Point(p.getX() + A * pq.getX(), p.getY() + A * pq.getY());
@@ -405,6 +431,15 @@ bool test_line(Line l, Line l2)
         // Check if point is in bounding box.
         // Bounding box can be used since it is known that the point is located on both lines.
 
+<<<<<<< HEAD
+=======
+        Double Ax = (l.getStart().getX() - l2.getStart().getX()) / s2n.getX();
+        Double Ay = (l.getStart().getY() - l2.getStart().getY()) / s2n.getY();
+
+        Double Bx = (l2.getStart().getX() - l.getStart().getX()) / sn.getX();
+        Double By = (l2.getStart().getY() - l.getStart().getY()) / sn.getY();
+
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
         if (l.IsBetween(intersection) && l2.IsBetween(intersection))
         {
             return true;
@@ -431,8 +466,65 @@ int main(void)
     if (!input.is_open())
         return 1;
 
+
+<<<<<<< HEAD
+=======
+    Line a(Point(56.857, 93.13), Point(56.7833, 92.9337));
+    Line b(Point(56.925, 93.478), Point(56.7926, 92.7889));
+
+    Line c(Point(61.637, 67.322), Point(62.0178, 67.5628));
+    Line d(Point(61.77, 67.501), Point(61.77, 67.0229));
+
+    // WRONG/DIFFERENT:
+    
+    /*
+    ccw has it, test not
+    Intersecting: (61.637, 67.322) (62.0178, 67.5628) (61.77, 67.501) (61.77, 67.0229)
+    Intersecting: (92.852, 3.902) (92.3061, 3.902) (93.041, 3.625) (92.1667, 4.39469)
+    */
+
+    test_line(c, d);
+
+    {
+        Line line1 = c;
+        Line line2 = d;
+
+        Double ccw1 = line1.ccw(line2.getStart());
+        Double ccw2 = line1.ccw(line2.getEnd());
+        Double ccw3 = line2.ccw(line1.getStart());
+        Double ccw4 = line2.ccw(line1.getEnd());
+
+        Double ccw1_2 = line1.ccw(line2.getStart()) * line1.ccw(line2.getEnd());
+        Double ccw3_4 = line2.ccw(line1.getStart()) * line2.ccw(line1.getEnd());
+
+        Point intersection = getPointOfIntersection(line1, line2);
+
+        Point p = line1.getStart();
+        Point q = line1.getEnd();
+
+        Point s = line2.getStart();
+        Point t = line2.getEnd();
+
+
+        if (ccw1 == 0 && ccw2 == 0 && ccw3 == 0 && ccw4 == 0)
+        {
+
+            if (line1.IsBetween(line2.getStart()) || line1.IsBetween(line2.getEnd()))
+                ;// push_back(IntersectionInfo(line1, line2, ccw1, ccw2, ccw3, ccw4));
+
+        }
+        else if (ccw1 * ccw2 <= 0 && ccw3 * ccw4 <= 0)
+        {
+            ;// intersecting_lines.push_back(IntersectionInfo(line1, line2, ccw1, ccw2, ccw3, ccw4));
+        }
+
+    }
+
+    test_line(a, b);
+
     std::string textline;
 
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
 
 
     std::string::size_type sz;
@@ -502,7 +594,11 @@ int main(void)
             if (b)
             {
                 tested++;
+<<<<<<< HEAD
                 // std::cout << "Intersecting: " << line1 << " " << line2 << std::endl;
+=======
+               // std::cout << "Intersecting: " << line1 << " " << line2 << std::endl;
+>>>>>>> 4ae8c11445cdb55f0f955303f9092a0f6a2ee7ab
                 intersecting_lines_test.push_back(IntersectionInfo(line1, line2, -1, -1, -1, -1));
 
             }
