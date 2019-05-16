@@ -18,12 +18,12 @@
 
 class Point
 {
-    float x, y;
+    double x, y;
 public:
-    Point(float x, float y) : x(x), y(y) {}
+    Point(double x, double y) : x(x), y(y) {}
 
-    const float getX() const { return x; }
-    const float getY() const { return y; }
+    const double getX() const { return x; }
+    const double getY() const { return y; }
 
     friend std::ostream& operator<<(std::ostream&, const Point&);
 
@@ -57,7 +57,7 @@ public:
     const Point getStart() const { return start; }
     const Point getEnd() const { return end; }
 
-    float ccw(Point r)
+    double ccw(Point r)
     {
 
         return (start.getX() * end.getY() - start.getY() * end.getX()) + (end.getX() * r.getY() - end.getY() * r.getX()) + (start.getY() * r.getX() - start.getX() * r.getY());
@@ -95,13 +95,13 @@ std::ostream& operator<<(std::ostream& out, const Line& line)
 class IntersectionInfo
 {
 public:
-    IntersectionInfo(Line l1, Line l2, float ccw, float ccw2, float ccw3, float ccw4) : l1(l1), l2(l2), ccw(ccw), ccw2(ccw2), ccw3(ccw3), ccw4(ccw4) {}
+    IntersectionInfo(Line l1, Line l2, double ccw, double ccw2, double ccw3, double ccw4) : l1(l1), l2(l2), ccw(ccw), ccw2(ccw2), ccw3(ccw3), ccw4(ccw4) {}
     Line l1;
     Line l2;
-    float ccw;
-    float ccw2;
-    float ccw3;
-    float ccw4;
+    double ccw;
+    double ccw2;
+    double ccw3;
+    double ccw4;
 };
 
 
@@ -117,9 +117,9 @@ int main(void)
  
     std::vector<Line> lines;
 
-    std::ifstream input("s_10000_1.dat", std::ios_base::in);
+    std::ifstream input("s_100000_1.dat", std::ios_base::in);
 
-    float x, y, x2, y2;
+    double x, y, x2, y2;
 
     if (!input.is_open())
         return 1;
@@ -159,10 +159,10 @@ int main(void)
                 Line line1 = lines[i];
                 Line line2 = lines[j];
 
-                float ccw1 = line1.ccw(line2.getStart());
-                float ccw2 = line1.ccw(line2.getEnd());
-                float ccw3 = line2.ccw(line1.getStart());
-                float ccw4 = line2.ccw(line1.getEnd());
+                double ccw1 = line1.ccw(line2.getStart());
+                double ccw2 = line1.ccw(line2.getEnd());
+                double ccw3 = line2.ccw(line1.getStart());
+                double ccw4 = line2.ccw(line1.getEnd());
 
                 if (ccw1 == 0 && ccw2 == 0 && ccw3 == 0 && ccw4 == 0)
                 {

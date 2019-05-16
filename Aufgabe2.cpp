@@ -50,7 +50,9 @@ public:
         float area = 0;
         for (int i = 1; i < m_points.size() - 1; i++)
         {
+            
             area += m_points[i].getY() * (m_points[i - 1].getX() - m_points[i + 1].getX()) / 2;
+            
         }
         return abs(area);
     }
@@ -77,7 +79,7 @@ int main(void)
 
     std::string id;
 
-    std::ofstream out("E:\\ComputationalGeometry\\log.txt", std::ios_base::out);
+    std::ofstream out("log.txt", std::ios_base::out);
 
 
     while (std::getline(input, textline))
@@ -140,6 +142,8 @@ int main(void)
 
     out.close();
 
+    float germany = 0;
+
     for (auto it = state_to_surface.begin(); it != state_to_surface.end(); it++)
     {
         float total = 0;
@@ -152,8 +156,12 @@ int main(void)
             total += (it->second[i].area());
         }
 
+        germany += total;
+
         std::cout << total << std::endl;
     }
+
+    std::cout << germany << std::endl;
 
     getchar();
 }
