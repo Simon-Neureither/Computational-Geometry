@@ -154,6 +154,9 @@ void removeDuplicateAreas(std::vector<Polygon> *polygonList){
 
 /* TODO: refine issue with order e.g. 
 * Brandenburg before Berlin --> Berlin is capital city of Brandenburg instead of Potsdam 
+* Idea: make temp struct with state to list to cities.
+* --> Cities can be added multiple times, after adding all cities check which occure in more than 1 list
+* Remove them from the lists in which another city is. Afterwards copy Key and first value of the city list to city_to_states.
 */
 // Map capital cities to states
 void getCapitalCities(
