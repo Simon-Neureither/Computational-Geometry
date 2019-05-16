@@ -28,6 +28,9 @@ public:
     const double getX() const { return x; }
     const double getY() const { return y; }
 
+    void setX(double x_new) { x = x_new;}
+    void setY(double y_new) { y = y_new;}
+
     friend std::ostream& operator<<(std::ostream&, const Point&);
 };
 
@@ -132,6 +135,37 @@ public:
     }
 };
 
+void removeDuplicateAreas(std::vector<Polygon> *polygonList){
+    std::vector<int> markedPolys;
+    for(int i = 0; i < polygonList->size(); i++){
+        for(int j = 0; j < polygonList->size(); j++){
+            if( i != j && (*polygonList)[j].IsInside((*polygonList)[i].getFirstPoint())){
+                markedPolys.push_back(i);
+            }    
+        }
+    }
+
+    for(auto poly_index : markedPolys){
+        polygonList->erase(polygonList->begin() + poly_index);
+    }
+}
+
+void getCapitalCities(
+    std::map<std::string, std::vector<Polygon>> state_to_surface,
+    std::map<std::string, Point> city_to_center, 
+    std::map<std::string, std::string> *city_to_state)
+{
+for(auto c : city_to_center){
+    for(auto s: state_to_surface){
+        for(int i = 0; i < s.second.size(); i++){
+            if(s.second[i].IsInside(c.second)){
+                city_to_state->emplace(c.first, s.first);     
+            }
+        } 
+    }
+}
+}
+
 
 int main(void)
 {
@@ -145,8 +179,9 @@ int main(void)
 
     std::string textline;
 
-
     std::map<std::string, std::vector<Polygon>> state_to_surface;
+    std::map<std::string, Point> city_to_center;
+    std::map<std::string, std::string> city_to_state;
 
     std::vector<Polygon>* polygonList;
     Polygon polygon;
@@ -156,12 +191,14 @@ int main(void)
     std::ofstream out("log_aufgabe2.txt", std::ios_base::out);
 
     int pos;
+    bool parse_cities = false;
 
     while (std::getline(input, textline))
     {
         if (textline.empty())
             break;
 
+        // Parse states 
         pos = textline.find("path id=\"");
         
         if (pos != std::string::npos)
@@ -173,8 +210,6 @@ int main(void)
             state_to_surface.emplace(id, std::vector<Polygon>());
 
             polygonList = &state_to_surface[id];
-
-            std::cout << id << std::endl;
         }
         else
         {
@@ -211,10 +246,55 @@ int main(void)
             }
         }
 
+        // End of states
+        pos = textline.find("</g>");
 
+        if(pos != std::string::npos && !parse_cities)
+            parse_cities = true;
+
+        // Parse cities
+        if(parse_cities){
+            pos = textline.find("id=\"");
+
+            if (pos != std::string::npos){
+                 int end = textline.find("\"", pos + 4);
+
+                 std::string id_city;   
+                 double x_city, y_city;
+
+                 id_city = textline.substr(pos + 4, end - pos - 4);
+
+                 std::string nextLine;
+                 std::getline(input, nextLine);
+                 pos = nextLine.find("cx=\"");
+
+                 if (pos != std::string::npos){
+                     int end = nextLine.find("\"", pos + 4);
+                     x_city = std::stod(nextLine.substr(pos + 4, end - pos - 4));   
+                 }
+                 std::getline(input, nextLine);
+                 pos = nextLine.find("cy=\"");
+
+                if (pos != std::string::npos){
+                    int end = nextLine.find("\"", pos + 4);
+                    y_city = std::stod(nextLine.substr(pos + 4, end - pos - 4));
+                }  
+
+                city_to_center.emplace(id_city, Point(x_city, y_city));               
+            }
+        }    
+    }
+
+    for (auto pair : city_to_center) {
+       //std::cout << pair.first << ": " << pair.second.getX() << " , " << pair.second.getY() <<  std::endl;
     }
 
     out.close();
+
+   // Remove areas inside areas of a polygon
+   for (auto& p: state_to_surface){
+       removeDuplicateAreas(&p.second);
+   }
 
     double germany_area = 0;
 
@@ -222,64 +302,35 @@ int main(void)
 
     for (auto pair : state_to_surface)
     {
+        //std::cout << pair.first << ": " << pair.second.size() << std::endl;
         double area = 0;
 
         for (int i = 0; i < pair.second.size(); i++)
         {
             double poly_area = pair.second[i].area();
-
-            for (int j = 0; j < pair.second.size(); j++)
-            {
-                if (i != j)
-                {
-                    if (pair.second[j].IsInside(pair.second[i].getFirstPoint()))
-                    {
-                        poly_area *= -1;
-                    }
-                }
-            }
             area += poly_area;
         }
 
         state_to_area[pair.first] = area;
         germany_area += area;
     }
-
-    /*
-    for (auto it = state_to_surface.begin(); it != state_to_surface.end(); it++)
-    {
-        double total = 0;
-      //  std::cout << it->first << ": ";
-        for (int i = 0; i < it->second.size(); i++)
-        {
-
-            double a = it->second[i].area();
-         //   std::cout << it->second[i].area() << "\r\n";
-
-            total += (it->second[i].area());
-
-
-        }
-       // std::cout << total << std::endl;
-
-        germany_area += total;
-        state_to_area[it->first] = total;
-    }
-    */
     // Scale
-    //double scale = BAVARIA / state_to_area["Bayern"];
     double scale = GERMANY / germany_area;
 
     for (auto pair : state_to_area)
     {
         state_to_area[pair.first] = pair.second * scale;
-        std::cout << pair.first << ": " << state_to_area[pair.first] << std::endl;
+        std::cout << pair.first << "'s Fläche beträgt: " << state_to_area[pair.first] << " km^2" << std::endl;
     }
     germany_area *= scale;
 
-    std::cout << "Deutschland: " << germany_area << std::endl;
+    std::cout << "Deutschlands Fläche beträgt: " << germany_area << " km^2" << std::endl;
 
-    std::cout << germany_area << std::endl;
+    getCapitalCities(state_to_surface,city_to_center, &city_to_state);
+
+    for(auto s :  city_to_state){
+        std::cout << s.first << " ist die Hauptstadt von " << s.second << std::endl;
+    }
 
     getchar();
 }
