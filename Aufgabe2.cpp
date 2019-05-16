@@ -135,6 +135,8 @@ public:
     }
 };
 
+// TODO: check if it works as intended
+// Remove duplicate areas from polygons e.g. berlin from Brandenburg
 void removeDuplicateAreas(std::vector<Polygon> *polygonList){
     std::vector<int> markedPolys;
     for(int i = 0; i < polygonList->size(); i++){
@@ -150,6 +152,10 @@ void removeDuplicateAreas(std::vector<Polygon> *polygonList){
     }
 }
 
+/* TODO: refine issue with order e.g. 
+* Brandenburg before Berlin --> Berlin is capital city of Brandenburg instead of Potsdam 
+*/
+// Map capital cities to states
 void getCapitalCities(
     std::map<std::string, std::vector<Polygon>> state_to_surface,
     std::map<std::string, Point> city_to_center, 
@@ -302,7 +308,6 @@ int main(void)
 
     for (auto pair : state_to_surface)
     {
-        //std::cout << pair.first << ": " << pair.second.size() << std::endl;
         double area = 0;
 
         for (int i = 0; i < pair.second.size(); i++)
@@ -314,6 +319,7 @@ int main(void)
         state_to_area[pair.first] = area;
         germany_area += area;
     }
+
     // Scale
     double scale = GERMANY / germany_area;
 
@@ -325,6 +331,8 @@ int main(void)
     germany_area *= scale;
 
     std::cout << "Deutschlands Fläche beträgt: " << germany_area << " km^2" << std::endl;
+
+    std::cout << std::endl;
 
     getCapitalCities(state_to_surface,city_to_center, &city_to_state);
 
