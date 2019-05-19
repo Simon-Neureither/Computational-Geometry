@@ -13,6 +13,8 @@
 
 #include <math.h>
 
+#include <algorithm>
+
 const double GERMANY_WIDTH = 640; // km
 const double GERMANY_HEIGHT = 876; // km
 const double BAVARIA = 70550; // km^2
@@ -152,27 +154,49 @@ void removeDuplicateAreas(std::vector<Polygon> *polygonList){
     }
 }
 
-/* TODO: refine issue with order e.g. 
-* Brandenburg before Berlin --> Berlin is capital city of Brandenburg instead of Potsdam 
-* Idea: make temp struct with state to list to cities.
-* --> Cities can be added multiple times, after adding all cities check which occure in more than 1 list
-* Remove them from the lists in which another city is. Afterwards copy Key and first value of the city list to city_to_states.
-*/
-// Map capital cities to states
+// Assign each capital city to its corresponding state
 void getCapitalCities(
     std::map<std::string, std::vector<Polygon>> state_to_surface,
     std::map<std::string, Point> city_to_center, 
-    std::map<std::string, std::string> *city_to_state)
+    std::map<std::string, std::string> *state_to_capital)
 {
-for(auto c : city_to_center){
-    for(auto s: state_to_surface){
-        for(int i = 0; i < s.second.size(); i++){
-            if(s.second[i].IsInside(c.second)){
-                city_to_state->emplace(c.first, s.first);     
-            }
-        } 
+    //Vars for duplicate check
+    std::vector<std::string> duplicateCapitals;   
+    std::map<std::string, std::vector<std::string>> temp; 
+    for(auto c : city_to_center){
+        uint32_t count = 0;
+        for(auto s: state_to_surface){
+            for(int i = 0; i < s.second.size(); i++){
+                if(s.second[i].IsInside(c.second)){
+                    if(temp.find(s.first) != temp.end()){
+                        temp[s.first].push_back(c.first);
+                    }else {
+                        temp.emplace(s.first, std::vector<std::string>());
+                        temp[s.first].push_back(c.first); 
+                    }  
+                    count++;  
+                }
+            } 
+        }
+        if(count > 1){
+            duplicateCapitals.push_back(c.first);
+        }
     }
-}
+
+    for(auto t : temp){
+        // Remove duplicate capitals 
+        if(t.second.size() > 1){
+            for(auto d : duplicateCapitals){
+                auto it = std::find(t.second.begin(), t.second.end(), d);
+                if(it != t.second.end()){
+                   t.second.erase(it);
+                   state_to_capital->emplace(t.first, t.second[0]);   
+                }
+            }
+        }else {
+            state_to_capital->emplace(t.first, t.second[0]);
+        }
+    }
 }
 
 
@@ -190,7 +214,7 @@ int main(void)
 
     std::map<std::string, std::vector<Polygon>> state_to_surface;
     std::map<std::string, Point> city_to_center;
-    std::map<std::string, std::string> city_to_state;
+    std::map<std::string, std::string> state_to_capital;
 
     std::vector<Polygon>* polygonList;
     Polygon polygon;
@@ -337,10 +361,10 @@ int main(void)
 
     std::cout << std::endl;
 
-    getCapitalCities(state_to_surface,city_to_center, &city_to_state);
+    getCapitalCities(state_to_surface,city_to_center, &state_to_capital);
 
-    for(auto s :  city_to_state){
-        std::cout << s.first << " ist die Hauptstadt von " << s.second << std::endl;
+    for(auto s :  state_to_capital){
+        std::cout << s.second << " ist die Hauptstadt von " << s.first << std::endl;
     }
 
     getchar();
