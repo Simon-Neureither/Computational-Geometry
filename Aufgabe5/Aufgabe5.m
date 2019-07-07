@@ -5,6 +5,7 @@ Polygon = [
      0    10
 ];
 
+
 Polygon2 = [
    59.9798  310.1933
    15.6250  491.2127
@@ -59,7 +60,7 @@ f = [0 0 -1];
 linprog(f,A,b)
 
 
-[A, b] = get_A_and_b_for_polygon(Polygon2)
+[A, b] = get_A_and_b_for_polygon(Polygon2);
 
 f = [0 0 -1];
 x = linprog(f, A, b)
@@ -69,7 +70,7 @@ X = reshape(Polygon2(:,1),2,[]);
 X = X(:);
 Y = reshape(Polygon2(:,2),2,[]);
 Y = Y(:);
-plot(X,Y)
+plot(X,Y);
 plot_circle(x(1), x(2), x(3));
 
 function plot_circle(x,y,r)
@@ -107,18 +108,18 @@ function [A, b] = get_A_and_b_for_polygon(polygon)
         ];
 
         % Normalenvektor berechnen
-        richtung
-        unnormalized_n = [ -richtung(2) richtung(1)]
+        unnormalized_n = [ richtung(2) -richtung(1)];
         n = unnormalized_n./norm(unnormalized_n);
 
-        c = n * aufpunkt;
+        
+        c = n * aufpunkt
 
         A(i, 1) = -n(1);
         A(i, 2) = -n(2);
         A(i, 3) = 1;
 
-
         b(i) = -c;
+       
 
     end
 end
