@@ -111,8 +111,6 @@ public:
     virtual double getX() const = 0;
     virtual double getY() const = 0;
 
-    virtual void apply(std::vector<Line>& sweepLine) = 0;
-
     int ID;
 };
 
@@ -158,12 +156,6 @@ class EventLineStart : public EventLine
 public:
 
     EventLineStart(Line line) : EventLine(line) {}
-
-    virtual void apply(std::vector<Line>& sweepLine)
-    {
-        sweepLine.push_back(m_line);
-    }
-
     double getX() const
     {
         return m_line.getStart().getX();
@@ -179,16 +171,6 @@ class EventLineEnd : public EventLine
 public:
 
     EventLineEnd(Line line) : EventLine(line) {}
-
-    virtual void apply(std::vector<Line>& sweepLine)
-    {
-        auto it = std::find(sweepLine.begin(), sweepLine.end(), m_line);
-        if (it == sweepLine.end())
-        {
-            throw std::exception("EventLineEnd::apply line not found!");
-        }
-        sweepLine.erase(it);
-    }
 
     double getX() const
     {
@@ -234,11 +216,6 @@ public:
     {
         return m_line2;
     }
-
-    void apply(std::vector<Line>& sweepLine)
-    {
-
-    }
 };
 
 
@@ -270,17 +247,13 @@ struct intersection_compare
     {
 
         return get_id(e.getLine(), e.getLine2()) < get_id(e2.getLine(), e2.getLine2());
-
-       // return e.ID < e2.ID;
     }
 };
 
-std::set<EventIntersection, intersection_compare> handledIntersections;
-
-std::set<uint64_t> handled_intersections;
 
 
-bool was_handled(EventIntersection* i)
+
+bool was_handled(EventIntersection* i, std::set<uint64_t>& handled_intersections)
 {
     auto id = intersection_compare().get_id((*i).getLine(), (*i).getLine2());
 
@@ -294,6 +267,13 @@ bool was_handled(EventIntersection* i)
         return false;
     }
 };
+
+void mark_as_handled(EventIntersection * e, std::set<uint64_t>& handled_intersections)
+{
+    auto id = intersection_compare().get_id((*e).getLine(), (*e).getLine2());
+
+    handled_intersections.emplace(id);
+}
 
 void handle_add(std::vector<Line>& sweepLine, EventLineStart* E, std::set<Event*, compare>& eventQueue)
 {
@@ -346,12 +326,14 @@ void handle_add(std::vector<Line>& sweepLine, EventLineStart* E, std::set<Event*
     }
 }
 
-std::vector<IntersectionInfo> do_it(std::vector<Line>& lines, bool print)
+std::vector<IntersectionInfo> get_intersections(std::vector<Line>& lines, bool print)
 {
     std::vector<Line> sweepLine;
     std::set<Event*, compare> eventQueue;
 
     std::vector<IntersectionInfo> intersections;
+    std::set<uint64_t> handled_intersections;
+
 
     for (int i = 0; i < lines.size(); i++)
     {
@@ -442,9 +424,10 @@ std::vector<IntersectionInfo> do_it(std::vector<Line>& lines, bool print)
             {
                 std::cout << "Skipping Intersection because intersection point is nan!" << std::endl;
             }
-            else if (!was_handled(E))
+            else if (!was_handled(E, handled_intersections))
             {
-                handledIntersections.emplace(EventIntersection(E->getLine(), E->getLine2()));
+                mark_as_handled(E, handled_intersections);
+
 
                 intersections.push_back(IntersectionInfo(E->getLine(), E->getLine2()));
 
@@ -515,60 +498,92 @@ std::vector<IntersectionInfo> do_it(std::vector<Line>& lines, bool print)
 
 #include <map>
 
+struct Test
+{
+    double input_ms = 0;
+    double running_ms = 0;
+    long intersections = 0;
+};
+
+Test calcAverage(std::vector<Test> tests)
+{
+    Test t;
+
+    int size = tests.size();
+
+    if (size > 0)
+    {
+
+        for (auto i = 0; i < size; i++)
+        {
+            t.input_ms += tests[i].input_ms;
+            t.running_ms += tests[i].running_ms;
+            t.intersections += tests[i].intersections;
+        }
+
+        t.input_ms /= size;
+        t.running_ms /= size;
+        t.intersections /= size;
+    }
+
+    return t;
+}
+
+void run_test(int runs)
+{
+    std::vector<std::string> filenames = { "s_1000_10.dat", "s_1000_1.dat", "s_10000_1.dat", "s_100000_1.dat" };
+    std::map<std::string, Test> filename_to_average_test_result;
+    for (auto i = 0; i < filenames.size(); i++)
+    {
+        std::string filename = filenames[i];
+        std::cout << "Starting test for file '" + filename + "'..." << std::endl;
+        std::vector<Test> tests;
+        for (auto j = 0; j < runs; j++)
+        {
+            auto start_time = std::chrono::steady_clock::now();
+            std::vector<Line> lines;
+            std::vector<IntersectionInfo> intersections;
+            if (!read_input_file_sorted(lines, filename))
+            {
+                std::cout << "Failed to read file '" << filename << "'.";
+                getchar();
+                return;
+            }
+            auto read_finished_time = std::chrono::steady_clock::now();
+
+            intersections = get_intersections(lines, false);
+
+            auto calc_intersections_finished_time = std::chrono::steady_clock::now();
+
+            Test test;
+            test.input_ms = get_ms(start_time, read_finished_time);
+            test.running_ms = get_ms(read_finished_time, calc_intersections_finished_time);
+            test.intersections = intersections.size();
+
+            tests.push_back(test);
+        }
+
+        Test averageTest = calcAverage(tests);
+        filename_to_average_test_result.emplace(filename, averageTest);
+    }
+
+
+    std::cout << "Number of test runs: " << runs << std::endl;
+    for (auto i = 0; i < filenames.size(); i++)
+    {
+        Test t = filename_to_average_test_result[filenames[i]];
+        std::cout << "Average test results for file '" << filenames[i] << "':" << std::endl;
+        std::cout << "\t input time:                    " << t.input_ms << " ms" << std::endl;
+        std::cout << "\t intersection calculation time: " << t.running_ms << " ms" << std::endl;
+        std::cout << "\t total time taken:              " << (t.running_ms + t.input_ms) << " ms" << std::endl;
+        std::cout << "\t nunber of intersections found: " << t.intersections << std::endl;
+
+    }
+}
 
 int main(void)
 {
-    std::vector<Line> lines;
-    std::vector<IntersectionInfo> intersections;
-
-    std::string filename = "s_100000_1.dat";
-
-    auto start_time = std::chrono::steady_clock::now();
-
-    if (!read_input_file_sorted(lines, filename))
-    {
-        std::cout << "Failed to read file '" << filename << "'.";
-        getchar();
-        return -1;
-    }
-
-    auto finished_input_time = std::chrono::steady_clock::now();
-    
-   // lines.clear();
-  //  lines.push_back(Line(Point(0, 0), Point(10, 0)));
-  //  lines.push_back(Line(Point(0, 1), Point(9, -1)));
-   /* lines.push_back(Line(Point(0, 0), Point(7, 0)));
-    lines.push_back(Line(Point(1, 1), Point(2, -1)));
-    lines.push_back(Line(Point(3, 2), Point(6, 2)));
-    lines.push_back(Line(Point(4, 3), Point(5, -2)));
-    
-    lines.push_back(Line(Point(-1, -1), Point(6, 3)));*/
-
-    intersections = do_it(lines, false);
-
-    auto finished_intersection_calculation = std::chrono::steady_clock::now();
-
-    std::ofstream out("log.txt", std::ios_base::out);
-    for (int i = 0; i < intersections.size(); i++)
-    {
-        auto info = intersections[i];
-        Line line1 = info.getLine1();
-        Line line2 = info.getLine2();
-        out << "Intersecting: " << line1 << " " << line2 << std::endl;
-    }
-
-    out.close();
-
-
-    auto end_time = std::chrono::steady_clock::now();
-
-    std::cout << "Time taken total: " << get_ms(start_time, end_time) << " milliseconds." << std::endl;
-    std::cout << "Time taken for parsing input: " << get_ms(start_time, finished_input_time) << " milliseconds." << std::endl;
-    std::cout << "Time taken for generating output: " << get_ms(finished_input_time, finished_intersection_calculation) << " milliseconds." << std::endl;
-    std::cout << "Time taken for writing output: " << get_ms(finished_intersection_calculation, end_time) << " milliseconds." << std::endl;
-
-    std::cout << "Number of intersections " << intersections.size() << "." << std::endl;
-
+    run_test(20);
     getchar();
 
     return 0;

@@ -112,7 +112,7 @@ function [A, b] = get_A_and_b_for_polygon(polygon)
         n = unnormalized_n./norm(unnormalized_n);
 
         
-        c = n * aufpunkt
+        c = n * aufpunkt;
 
         A(i, 1) = -n(1);
         A(i, 2) = -n(2);
